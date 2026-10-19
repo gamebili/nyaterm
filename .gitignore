@@ -40,6 +40,26 @@ temp/
 .codex
 .trae
 
+# Local sessions and exports
+.nyaterm/
+*.sessions
+*.nya
+
+# Private keys and credential bundles
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+id_ecdsa_sk
+id_ed25519_sk
+*.pem
+*.key
+*.ppk
+*.p12
+*.pfx
+*.p8
+*.pkcs12
+
 # Web runtime secrets and data
 .env
 .env.*
