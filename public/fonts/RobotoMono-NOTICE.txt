@@ -1,0 +1,13 @@
+RobotoMono Nerd Font Regular and Bold
+Version 3.000; Nerd Fonts 3.3.0
+
+Copyright 2015 The Roboto Mono Project Authors
+https://github.com/googlefonts/robotomono
+
+These fonts are distributed unmodified from Nerd Fonts v3.3.0:
+https://github.com/ryanoasis/nerd-fonts/tree/v3.3.0/patched-fonts/RobotoMono
+
+The regular face is byte-identical to the font bundled with WindTerm 2.7.0.
+
+See RobotoMono-LICENSE.txt for the Apache License 2.0 and
+Nerd-Fonts-LICENSE.txt for the Nerd Fonts project and added glyph licenses.

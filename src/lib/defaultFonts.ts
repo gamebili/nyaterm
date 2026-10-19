@@ -1,7 +1,7 @@
 import { isMacOS, isWindows } from "./platform";
 
 export const DEFAULT_TERMINAL_FONT_FAMILY =
-  '"JetBrainsMono Nerd Font Mono", "JetBrains Mono", "Cascadia Mono", "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Noto Sans SC Variable", monospace';
+  '"RobotoMono Nerd Font", "JetBrainsMono Nerd Font Mono", "JetBrains Mono", "Cascadia Mono", "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Noto Sans SC Variable", monospace';
 
 export function getDefaultUiFontFamily() {
   if (isMacOS) {

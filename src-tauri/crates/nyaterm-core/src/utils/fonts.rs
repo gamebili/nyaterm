@@ -2,7 +2,8 @@ use font_kit::font::Font;
 use font_kit::source::SystemSource;
 use serde::Serialize;
 
-pub const DEFAULT_TERMINAL_FONT_FAMILY: &str = "\"JetBrainsMono Nerd Font Mono\", \"JetBrains Mono\", \"Cascadia Mono\", \"SF Mono\", Menlo, Monaco, Consolas, \"Liberation Mono\", \"Noto Sans SC Variable\", monospace";
+pub const DEFAULT_TERMINAL_FONT_FAMILY: &str = "\"RobotoMono Nerd Font\", \"JetBrainsMono Nerd Font Mono\", \"JetBrains Mono\", \"Cascadia Mono\", \"SF Mono\", Menlo, Monaco, Consolas, \"Liberation Mono\", \"Noto Sans SC Variable\", monospace";
+const LEGACY_CJK_TERMINAL_FONT_FAMILY: &str = "\"JetBrainsMono Nerd Font Mono\", \"JetBrains Mono\", \"Cascadia Mono\", \"SF Mono\", Menlo, Monaco, Consolas, \"Liberation Mono\", \"Noto Sans SC Variable\", monospace";
 const LEGACY_NERD_TERMINAL_FONT_FAMILY: &str = "\"JetBrainsMono Nerd Font Mono\", \"JetBrains Mono\", \"Cascadia Mono\", \"SF Mono\", Menlo, Monaco, Consolas, \"Liberation Mono\", monospace";
 const LEGACY_DEFAULT_TERMINAL_FONT_FAMILY: &str = "\"JetBrains Mono\", \"Cascadia Mono\", \"SF Mono\", Menlo, Monaco, Consolas, \"Liberation Mono\", monospace";
 
@@ -17,7 +18,11 @@ pub const DEFAULT_UI_FONT_FAMILY: &str =
 pub const DEFAULT_UI_FONT_FAMILY: &str =
     "system-ui, \"Noto Sans SC\", \"Noto Sans CJK SC\", \"Helvetica Neue\", Arial, sans-serif";
 
-const BUILT_IN_MONOSPACE_FONTS: &[&str] = &["JetBrainsMono Nerd Font Mono", "JetBrains Mono"];
+const BUILT_IN_MONOSPACE_FONTS: &[&str] = &[
+    "RobotoMono Nerd Font",
+    "JetBrainsMono Nerd Font Mono",
+    "JetBrains Mono",
+];
 const GENERIC_MONOSPACE_FAMILY: &str = "monospace";
 
 #[derive(Debug, Clone, Serialize)]
@@ -59,6 +64,9 @@ pub fn normalize_terminal_font_family(font_family: &str) -> String {
     }
 
     if is_legacy_default_terminal_font_family(font_family)
+        || font_family
+            .trim()
+            .eq_ignore_ascii_case(LEGACY_CJK_TERMINAL_FONT_FAMILY)
         || font_family
             .trim()
             .eq_ignore_ascii_case(LEGACY_NERD_TERMINAL_FONT_FAMILY)
