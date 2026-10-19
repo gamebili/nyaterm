@@ -283,6 +283,81 @@ export function useTerminalSettings(
     snapshotRestoringRef,
   ]);
 
+  // Web fonts (including lazily loaded CJK subsets) can finish after xterm has
+  // measured its cells and cached glyphs. Rebuild both using the loaded faces.
+  useEffect(() => {
+    const terminal = terminalInstance ?? terminalRef.current;
+    const fonts = terminal?.element?.ownerDocument.fonts;
+    if (!terminal || !fonts) return;
+
+    let disposed = false;
+    let refreshTimer: number | null = null;
+    const fontFamily = appearance.font_family;
+    const fontSize = resolveTerminalFontSize(
+      appearance.font_size,
+      terminalSettings.font_size_delta,
+    );
+
+    const refreshFonts = () => {
+      if (disposed) return;
+      if (refreshTimer !== null) window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(() => {
+        refreshTimer = null;
+        if (disposed || terminalRef.current !== terminal) return;
+        if (isSnapshotRestoreActive(snapshotRestoringRef)) {
+          refreshFonts();
+          return;
+        }
+
+        // xterm has no public API to remeasure an unchanged font family.
+        const core = (terminal as Terminal & {
+          _core?: { _charSizeService?: { measure(): void } };
+        })._core;
+        core?._charSizeService?.measure();
+        terminal.clearTextureAtlas();
+        terminal.refresh(0, Math.max(0, terminal.rows - 1));
+        fitSchedulerRef.current?.schedule({
+          reason: "appearance",
+          force: true,
+          refresh: true,
+        });
+      }, 50);
+    };
+
+    const onFontsLoaded = (event: Event) => {
+      const loaded = (event as FontFaceSetLoadEvent).fontfaces;
+      if (
+        loaded.some((face) =>
+          fontFamily.toLowerCase().includes(face.family.replace(/["']/g, "").toLowerCase()),
+        )
+      ) {
+        refreshFonts();
+      }
+    };
+    fonts.addEventListener("loadingdone", onFontsLoaded);
+    void Promise.allSettled(
+      [appearance.font_weight, appearance.font_weight_bold].map((weight) =>
+        fonts.load(`${weight} ${fontSize}px ${fontFamily}`, "MWmw09\u4e2d\u6587"),
+      ),
+    ).then(refreshFonts);
+
+    return () => {
+      disposed = true;
+      if (refreshTimer !== null) window.clearTimeout(refreshTimer);
+      fonts.removeEventListener("loadingdone", onFontsLoaded);
+    };
+  }, [
+    appearance.font_family,
+    appearance.font_size,
+    appearance.font_weight,
+    appearance.font_weight_bold,
+    terminalSettings.font_size_delta,
+    terminalInstance,
+    terminalRef,
+    fitSchedulerRef,
+    snapshotRestoringRef,
+  ]);
+
   // React to terminal core settings changes: scrollback
   useEffect(() => {
     if (terminalRef.current) {

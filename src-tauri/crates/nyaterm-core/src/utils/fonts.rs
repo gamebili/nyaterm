@@ -2,7 +2,8 @@ use font_kit::font::Font;
 use font_kit::source::SystemSource;
 use serde::Serialize;
 
-pub const DEFAULT_TERMINAL_FONT_FAMILY: &str = "\"JetBrainsMono Nerd Font Mono\", \"JetBrains Mono\", \"Cascadia Mono\", \"SF Mono\", Menlo, Monaco, Consolas, \"Liberation Mono\", monospace";
+pub const DEFAULT_TERMINAL_FONT_FAMILY: &str = "\"JetBrainsMono Nerd Font Mono\", \"JetBrains Mono\", \"Cascadia Mono\", \"SF Mono\", Menlo, Monaco, Consolas, \"Liberation Mono\", \"Noto Sans SC Variable\", monospace";
+const LEGACY_NERD_TERMINAL_FONT_FAMILY: &str = "\"JetBrainsMono Nerd Font Mono\", \"JetBrains Mono\", \"Cascadia Mono\", \"SF Mono\", Menlo, Monaco, Consolas, \"Liberation Mono\", monospace";
 const LEGACY_DEFAULT_TERMINAL_FONT_FAMILY: &str = "\"JetBrains Mono\", \"Cascadia Mono\", \"SF Mono\", Menlo, Monaco, Consolas, \"Liberation Mono\", monospace";
 
 #[cfg(target_os = "macos")]
@@ -57,7 +58,11 @@ pub fn normalize_terminal_font_family(font_family: &str) -> String {
         return DEFAULT_TERMINAL_FONT_FAMILY.to_string();
     }
 
-    if is_legacy_default_terminal_font_family(font_family) {
+    if is_legacy_default_terminal_font_family(font_family)
+        || font_family
+            .trim()
+            .eq_ignore_ascii_case(LEGACY_NERD_TERMINAL_FONT_FAMILY)
+    {
         return DEFAULT_TERMINAL_FONT_FAMILY.to_string();
     }
 
@@ -71,7 +76,10 @@ pub fn normalize_terminal_font_family(font_family: &str) -> String {
             continue;
         }
 
-        if is_built_in_monospace_family(&family)
+        // The bundled CJK face is a fallback after a monospace primary font,
+        // never a proportional replacement for the terminal's Latin grid.
+        if (family.eq_ignore_ascii_case("Noto Sans SC Variable") && !kept.is_empty())
+            || is_built_in_monospace_family(&family)
             || is_system_font_family_monospace_with_source(&source, &family)
         {
             push_unique_font_family(&mut kept, raw_family.trim().to_string());
