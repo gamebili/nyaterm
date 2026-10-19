@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { copyFileSync, mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -47,4 +47,7 @@ const destination = join(
   `nyaterm-mcp-${target}${suffix}`,
 );
 mkdirSync(dirname(destination), { recursive: true });
-copyFileSync(source, destination);
+// Keep the bundled sidecar's mtime stable when Cargo reused the same binary.
+if (!existsSync(destination) || !readFileSync(source).equals(readFileSync(destination))) {
+  copyFileSync(source, destination);
+}

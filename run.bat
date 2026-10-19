@@ -2,6 +2,13 @@
 setlocal
 cd /d "%~dp0"
 
+rem Fast local iteration only; setlocal keeps production build settings unchanged.
+rem These overrides also apply to the MCP sidecar built by beforeBuildCommand.
+set "CARGO_PROFILE_RELEASE_LTO=off"
+set "CARGO_PROFILE_RELEASE_OPT_LEVEL=1"
+set "CARGO_PROFILE_RELEASE_CODEGEN_UNITS=256"
+set "CARGO_INCREMENTAL=1"
+
 where pnpm >nul 2>nul
 if errorlevel 1 (
     echo [run.bat] pnpm not found. Install pnpm, or run: corepack enable
@@ -32,7 +39,7 @@ rem A running release exe locks the file the linker has to replace.
 echo [run.bat] Closing a running release NyaTerm, if any...
 powershell -NoProfile -NonInteractive -Command "$exe = [IO.Path]::GetFullPath('%EXE%'); Get-Process nyaterm -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $exe } | ForEach-Object { [void]$_.CloseMainWindow(); if (-not $_.WaitForExit(5000)) { $_.Kill(); $_.WaitForExit(5000) | Out-Null } }"
 
-echo [run.bat] Building release...
+echo [run.bat] Building local release (LTO off, incremental on)...
 call pnpm tauri build --no-bundle
 if errorlevel 1 (
     echo [run.bat] Release build failed.
