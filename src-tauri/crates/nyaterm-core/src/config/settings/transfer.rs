@@ -29,7 +29,7 @@ pub struct TransferSettings {
     pub transfer_buffer_size: u32,
     #[serde(default)]
     pub download_path: String,
-    #[serde(default = "default_false")]
+    #[serde(default = "default_true")]
     pub ask_save_location: bool,
     #[serde(default)]
     pub default_editor: String,
@@ -90,7 +90,7 @@ impl Default for TransferSettings {
             max_transfer_retries: default_max_retries(),
             transfer_buffer_size: default_buffer_size(),
             download_path: String::new(),
-            ask_save_location: false,
+            ask_save_location: true,
             default_editor: String::new(),
             recording_path: String::new(),
             recording_include_io_labels: true,

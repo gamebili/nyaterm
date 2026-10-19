@@ -219,7 +219,7 @@ const DEFAULT_APP_SETTINGS: AppSettings = {
     max_transfer_retries: 2,
     transfer_buffer_size: 32,
     download_path: "",
-    ask_save_location: false,
+    ask_save_location: true,
     default_editor: "",
     recording_path: "",
     recording_include_io_labels: true,

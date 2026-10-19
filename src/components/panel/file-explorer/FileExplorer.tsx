@@ -3142,6 +3142,7 @@ function FileExplorerPane({
   const downloadEntries = async (
     entries: FileEntry[],
     pathResolver?: (entry: FileEntry) => string,
+    askSaveLocation = appSettings.transfer.ask_save_location,
   ) => {
     if (!activeSessionId || entries.length === 0) return;
     const resolveEntryPath = (entry: FileEntry) =>
@@ -3157,7 +3158,7 @@ function FileExplorerPane({
         }
         return;
       }
-      const askEach = appSettings.transfer.ask_save_location;
+      const defaultDir = await resolveDownloadDir();
       const downloads: Array<{
         sessionId: string;
         fileName: string;
@@ -3166,12 +3167,15 @@ function FileExplorerPane({
         kind: "file" | "directory";
       }> = [];
 
-      if (askEach) {
+      if (askSaveLocation) {
         if (entries.length === 1) {
           const entry = entries[0];
           const safeName = await sanitizeDownloadFileName(entry.name);
           if (entry.is_dir) {
-            const localDir = await openDialog({ directory: true });
+            const localDir = await openDialog({
+              directory: true,
+              defaultPath: defaultDir,
+            });
             if (!localDir || typeof localDir !== "string") return;
             const localPath = await join(localDir, safeName);
             downloads.push({
@@ -3182,7 +3186,9 @@ function FileExplorerPane({
               kind: "directory",
             });
           } else {
-            const localPath = await saveDialog({ defaultPath: safeName });
+            const localPath = await saveDialog({
+              defaultPath: await join(defaultDir, safeName),
+            });
             if (!localPath) return;
             downloads.push({
               sessionId: activeSessionId,
@@ -3193,7 +3199,10 @@ function FileExplorerPane({
             });
           }
         } else {
-          const localDir = await openDialog({ directory: true });
+          const localDir = await openDialog({
+            directory: true,
+            defaultPath: defaultDir,
+          });
           if (!localDir || typeof localDir !== "string") return;
 
           for (const entry of entries) {
@@ -3211,8 +3220,6 @@ function FileExplorerPane({
         enqueueDownloads(downloads);
         return;
       }
-
-      const defaultDir = await resolveDownloadDir();
 
       for (const entry of entries) {
         const safeName = await sanitizeDownloadFileName(entry.name);
@@ -3243,18 +3250,9 @@ function FileExplorerPane({
     await downloadEntries(selectedRealFiles);
   };
 
-  const handleDownload = async (entry: FileEntry) => {
-    await downloadEntries([entry]);
-  };
-
   const handleDownloadFromContextMenu = async (entry: FileEntry) => {
-    if (selectedFiles.size > 1 && selectedFiles.has(entry.name)) {
-      const selected = getContextMenuEntries(entry);
-      await downloadEntries(selected);
-      return;
-    }
-
-    await handleDownload(entry);
+    // Right-click downloads choose a destination even with legacy settings.
+    await downloadEntries(getContextMenuEntries(entry), undefined, true);
   };
 
   const handleUploadFiles = async (directoryPath = currentPath) => {
@@ -3718,12 +3716,16 @@ function FileExplorerPane({
     });
   };
 
-  const handleTreeDownload = (rows: FileExplorerTreeRow[]) => {
+  const handleTreeDownload = (
+    rows: FileExplorerTreeRow[],
+    askSaveLocation = appSettings.transfer.ask_save_location,
+  ) => {
     if (rows.length === 0) return;
     const pathByEntry = new Map(rows.map((row) => [row.entry, row.path]));
     void downloadEntries(
       rows.map((row) => row.entry),
       (entry) => pathByEntry.get(entry) ?? getEntryFullPath(entry),
+      askSaveLocation,
     );
   };
 
@@ -4504,7 +4506,7 @@ function FileExplorerPane({
             onUploadFolderContents={(path) =>
               void handleUploadFolderContents(path)
             }
-            onDownload={handleTreeDownload}
+            onDownload={(rows) => handleTreeDownload(rows, true)}
             onSendToPeer={handleTreeSendToPeer}
             onSendToTarget={handleTreeSendToTarget}
             onRename={(row) =>
